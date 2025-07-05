@@ -99,6 +99,11 @@ const Navbar = () => {
                             <span>{carrito.length}</span>
                         </Link>
 
+                        <Link to="/historial" className="flex items-center gap-1 text-green-800 font-semibold hover:underline">
+                            <span className="material-icons">📜</span>
+                            <span>Historial</span>
+                        </Link>
+
                         <Link to="/chat" className="flex items-center gap-1 text-green-800 font-semibold hover:underline">
                             <FaComments />
                             <span>Mensajes</span>

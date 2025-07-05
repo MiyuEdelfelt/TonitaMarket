@@ -16,6 +16,8 @@ import PublicarProducto from './pages/PublicarProducto';
 import PublicarServicio from './pages/PublicarServicio';
 import PublicarAdopcion from './pages/PublicarAdopcion';
 import Chat from './pages/Chat';
+import Historial from './pages/Historial';
+
 
 import { CarritoProvider } from './context/CarritoContext';
 import { AuthProvider } from './context/AuthContext';
@@ -82,6 +84,14 @@ const App = () => {
               element={
                 <RutaPrivada>
                   <PublicarAdopcion />
+                </RutaPrivada>
+              }
+            />
+            <Route
+              path="/historial"
+              element={
+                <RutaPrivada>
+                  <Historial />
                 </RutaPrivada>
               }
             />

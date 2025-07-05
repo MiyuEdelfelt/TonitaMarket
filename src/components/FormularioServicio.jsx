@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 
 const FormularioServicio = () => {
     const [formulario, setFormulario] = useState({
-        nombre: '',
-        descripcion: '',
-        precio: '',
+        title_publication: '',
+        description_publication: '',
+        price_publication: '',
     });
 
     const handleChange = (e) => {
@@ -16,52 +16,33 @@ const FormularioServicio = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("Servicio publicado:", formulario);
-        // Aquí puedes hacer el POST al backend
+
+        const payload = {
+            ...formulario,
+            image_publication: 'https://via.placeholder.com/300', // opcional por ahora
+            category_id: 2, // Servicio
+            user_id: 1,     // Usuario ficticio
+        };
+
+        console.log("Servicio publicado:", payload);
+        // POST al backend real aquí
     };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Nombre del servicio</label>
-                <input
-                    type="text"
-                    name="nombre"
-                    value={formulario.nombre}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-2 border border-gray-300 rounded"
-                />
-            </div>
+            <input type="text" name="title_publication" value={formulario.title_publication}
+                onChange={handleChange} required placeholder="Nombre del servicio"
+                className="w-full p-2 border rounded" />
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Descripción</label>
-                <textarea
-                    name="descripcion"
-                    value={formulario.descripcion}
-                    onChange={handleChange}
-                    rows="3"
-                    required
-                    className="w-full p-2 border border-gray-300 rounded"
-                />
-            </div>
+            <textarea name="description_publication" value={formulario.description_publication}
+                onChange={handleChange} required rows={3} placeholder="Descripción"
+                className="w-full p-2 border rounded" />
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Precio</label>
-                <input
-                    type="number"
-                    name="precio"
-                    value={formulario.precio}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-2 border border-gray-300 rounded"
-                />
-            </div>
+            <input type="number" name="price_publication" value={formulario.price_publication}
+                onChange={handleChange} required placeholder="Precio"
+                className="w-full p-2 border rounded" />
 
-            <button
-                type="submit"
-                className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition"
-            >
+            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
                 Publicar Servicio
             </button>
         </form>
