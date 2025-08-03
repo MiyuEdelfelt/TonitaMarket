@@ -1,37 +1,63 @@
-import React, { useState } from 'react';
-
-const datosSimulados = [
-    {
-        id: 1,
-        tipo: 'producto',
-        nombre: 'Arena para gato',
-        descripcion: 'Arena absorbente premium 10kg',
-        imagen: '/img/producto1.jpg',
-        fecha: '2025-07-04'
-    },
-    {
-        id: 2,
-        tipo: 'servicio',
-        nombre: 'Baño felino a domicilio',
-        descripcion: 'Baño y cepillado profesional',
-        imagen: '/img/gato1.png',
-        fecha: '2025-07-03'
-    },
-    {
-        id: 3,
-        tipo: 'adopcion',
-        nombre: 'Michito',
-        descripcion: 'Gatito de 2 meses busca hogar',
-        imagen: '/img/adopcion1.jpg',
-        fecha: '2025-07-01'
-    },
-];
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Historial = () => {
+    const [datos, setDatos] = useState([]);
     const [busqueda, setBusqueda] = useState('');
     const [filtro, setFiltro] = useState('');
 
-    const resultados = datosSimulados.filter(item =>
+    useEffect(() => {
+        const fetchHistorial = async () => {
+            try {
+                const usuarioString = localStorage.getItem('usuarioToñita');
+                const usuario = usuarioString ? JSON.parse(usuarioString) : null;
+                if (!usuario || !usuario.token) {
+                    alert('Debes iniciar sesión para ver el historial');
+                    return;
+                }
+
+                const response = await axios.get('https://bk-tonita.onrender.com/api/sales/history', {
+                    headers: {
+                        Authorization: `Bearer ${usuario.token}`
+                    }
+                });
+
+                const historialAdaptado = response.data.map((item) => {
+                    const categoria = Number(item.category_id);
+                    let tipo = 'adopcion';
+
+                    if (categoria === 1) tipo = 'producto';
+                    else if (categoria === 2) tipo = 'servicio';
+                    else if (categoria === 3) tipo = 'adopcion';
+
+                    return {
+                        id: item.id || item.publication_id || Math.random(),
+                        tipo,
+                        nombre: item.title_publication || item.nombre || 'Sin nombre',
+                        descripcion: item.description_publication || item.descripcion || 'Sin descripción',
+                        imagen: item.image_publication?.startsWith('/uploads/')
+                            ? `https://bk-tonita.onrender.com${item.image_publication}`
+                            : `https://bk-tonita.onrender.com/uploads/${item.image_publication}`,
+                        fecha: item.sale_date
+                            ? new Date(item.sale_date).toLocaleDateString('es-CL', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                              })
+                            : 'Fecha desconocida'
+                    };
+                });
+
+                setDatos(historialAdaptado);
+            } catch (error) {
+                console.error('Error al obtener historial:', error);
+            }
+        };
+
+        fetchHistorial();
+    }, []);
+
+    const resultados = datos.filter(item =>
         item.nombre.toLowerCase().includes(busqueda.toLowerCase()) &&
         (filtro === '' || item.tipo === filtro)
     );

@@ -1,15 +1,26 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [usuarioAutenticado, setUsuarioAutenticado] = useState(
-        !!localStorage.getItem('usuarioToñita')
-    );
+    const [usuarioAutenticado, setUsuarioAutenticado] = useState(null);
 
-    const login = () => setUsuarioAutenticado(true);
+    // Leer del localStorage al iniciar
+    useEffect(() => {
+        const usuarioGuardado = localStorage.getItem('usuarioToñita');
+        if (usuarioGuardado) {
+            setUsuarioAutenticado(JSON.parse(usuarioGuardado));
+        }
+    }, []);
+
+    // Función de login que guarda el objeto completo
+    const login = (usuarioData) => {
+        setUsuarioAutenticado(usuarioData);
+        localStorage.setItem('usuarioToñita', JSON.stringify(usuarioData));
+    };
+
     const logout = () => {
-        setUsuarioAutenticado(false);
+        setUsuarioAutenticado(null);
         localStorage.removeItem('usuarioToñita');
     };
 

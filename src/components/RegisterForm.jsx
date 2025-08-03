@@ -7,7 +7,8 @@ const RegisterForm = () => {
         last_name_cat: '',
         alias_cat: '',
         email_cat: '',
-        pass_cat: ''
+        pass_cat: '',
+        phone_cat: ''
     });
 
     const [error, setError] = useState('');
@@ -22,12 +23,23 @@ const RegisterForm = () => {
         setError('');
         setSuccess('');
 
+        // 👇 Convertimos los campos a los que espera el backend
+        const datosAEnviar = {
+            name: form.name_cat,
+            lastName: form.last_name_cat,
+            alias: form.alias_cat,
+            email: form.email_cat,
+            password: form.pass_cat,
+            phone: form.phone_cat || 'Sin número',
+            roleId: 2,
+            m_anulado: 0
+        };
+
+        console.log("🟢 Enviando al backend:", datosAEnviar);
+
         try {
-            await axios.post('http://localhost:3000/api/auth/register', {
-                ...form,
-                role_cat_id: 2,
-                m_anulado: 0
-            });
+            const res = await axios.post('https://bk-tonita.onrender.com/api/users/register', datosAEnviar);
+            console.log("✅ Registro exitoso:", res.data);
 
             setSuccess('Usuario registrado correctamente');
             setForm({
@@ -35,10 +47,12 @@ const RegisterForm = () => {
                 last_name_cat: '',
                 alias_cat: '',
                 email_cat: '',
-                pass_cat: ''
+                pass_cat: '',
+                phone_cat: ''
             });
         } catch (err) {
-            setError('Error al registrar el usuario');
+            console.error("🔴 Error al registrar:", err?.response?.data || err.message);
+            setError(err?.response?.data?.message || 'Error al registrar el usuario');
         }
     };
 
@@ -92,12 +106,20 @@ const RegisterForm = () => {
                 className="p-3 border rounded-lg"
                 required
             />
+            <input
+                type="text"
+                name="phone_cat"
+                value={form.phone_cat}
+                onChange={handleChange}
+                placeholder="Número de teléfono (opcional)"
+                className="p-3 border rounded-lg"
+            />
 
             <button
                 type="submit"
                 className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-bold"
             >
-                 ¡Registrarme! 🐱
+                ¡Registrarme! 🐱
             </button>
         </form>
     );

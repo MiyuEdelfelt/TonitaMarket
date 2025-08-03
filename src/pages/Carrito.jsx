@@ -1,44 +1,91 @@
+// src/pages/Carrito.jsx
+
 import React from 'react';
 import { useCarrito } from '../context/CarritoContext';
 import { FaTrash } from 'react-icons/fa';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
 const Carrito = () => {
     const { carrito, eliminarDelCarrito, limpiarCarrito } = useCarrito();
-    const navigate = useNavigate();
 
-    const total = carrito.reduce((acc, item) => acc + (item.precio || 0), 0);
+    const total = carrito.reduce((acc, item) => acc + Number(item.price_publication || 0), 0);
 
     const finalizarCompra = async () => {
         if (carrito.length === 0) return;
 
-        // Simulación: obtener primer publicador de la compra
-        const publicador = carrito[0];
-
-        // Limpiar el carrito
-        limpiarCarrito();
-
-        // Mostrar mensaje con opción a ir al chat
-        const resultado = await Swal.fire({
-            icon: 'success',
-            title: '¡Compra realizada con éxito! 🐾',
-            text: 'Gracias por tu compra. Para más detalles puedes contactar al publicador.',
-            showCancelButton: true,
-            confirmButtonText: 'Ir al chat',
-            cancelButtonText: 'OK',
-            reverseButtons: true
-        });
-
-        if (resultado.isConfirmed) {
-            navigate('/chat', {
-                state: {
-                    id_usuario: publicador.id_usuario || null,
-                    nombre: publicador.nombre,
-                    tipo: publicador.tipo,
-                }
+        const usuarioToñitaStr = localStorage.getItem('usuarioToñita');
+        if (!usuarioToñitaStr) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No estás autenticado. Por favor inicia sesión.',
             });
         }
+
+        let token;
+        try {
+            const usuarioToñita = JSON.parse(usuarioToñitaStr);
+            token = usuarioToñita.token;
+        } catch (error) {
+            console.error('Error al parsear usuarioToñita:', error);
+            return Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Sesión inválida. Vuelve a iniciar sesión.',
+            });
+        }
+
+        if (!token) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Token no encontrado. Inicia sesión nuevamente.',
+            });
+        }
+
+        try {
+            const response = await axios.post(
+                'https://bk-tonita.onrender.com/api/checkout',
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            limpiarCarrito();
+
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Compra realizada con éxito! 🐾',
+                text: 'Gracias por tu compra. Para más detalles puedes contactar al publicador.',
+            });
+
+        } catch (error) {
+            console.error('Error al finalizar compra:', error);
+
+            let mensaje = 'Hubo un problema al realizar la compra.';
+            if (error.response?.status === 403) {
+                mensaje = 'Token inválido o sesión expirada.';
+            }
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: mensaje,
+            });
+        }
+    };
+
+    const getImagenUrl = (img) => {
+        if (!img) return '/placeholder.jpg';
+        return img.startsWith('/uploads/')
+            ? `https://bk-tonita.onrender.com${img}`
+            : `https://bk-tonita.onrender.com/uploads/${img}`;
     };
 
     return (
@@ -56,13 +103,22 @@ const Carrito = () => {
                         {carrito.map((item, index) => (
                             <li key={index} className="flex items-center justify-between bg-white p-4 rounded-xl shadow">
                                 <div className="flex items-center gap-4">
-                                    <img src={item.imagen} alt={item.nombre} className="w-16 h-16 object-cover rounded-md" />
+                                    <img
+                                        src={getImagenUrl(item.image_publication)}
+                                        alt={item.title_publication}
+                                        className="w-16 h-16 object-cover rounded-md"
+                                    />
                                     <div>
-                                        <h2 className="text-lg font-semibold text-green-800">{item.nombre}</h2>
-                                        <p className="text-gray-500 text-sm">${item.precio?.toLocaleString()}</p>
+                                        <h2 className="text-lg font-semibold text-green-800">{item.title_publication}</h2>
+                                        <p className="text-gray-500 text-sm">
+                                            ${Number(item.price_publication).toLocaleString('es-CL')}
+                                        </p>
                                     </div>
                                 </div>
-                                <button onClick={() => eliminarDelCarrito(item.id)} className="text-red-600 hover:text-red-800">
+                                <button
+                                    onClick={() => eliminarDelCarrito(item.id_publication)}
+                                    className="text-red-600 hover:text-red-800"
+                                >
                                     <FaTrash />
                                 </button>
                             </li>
@@ -70,7 +126,9 @@ const Carrito = () => {
                     </ul>
 
                     <div className="text-right mb-6">
-                        <p className="text-xl font-bold text-green-800">Total: ${total.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-green-800">
+                            Total: ${total.toLocaleString('es-CL')}
+                        </p>
                     </div>
 
                     <div className="flex justify-between">

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import {
     FaCat, FaChevronDown, FaUserCircle,
-    FaShoppingCart, FaBars, FaTimes, FaComments
+    FaShoppingCart, FaBars, FaTimes
 } from 'react-icons/fa';
 import { useState, useRef, useEffect } from 'react';
 import { useCarrito } from '../context/CarritoContext';
@@ -34,7 +34,7 @@ const Navbar = () => {
 
     return (
         <nav className="bg-green-200 shadow-md py-3 px-6 flex flex-col md:flex-row md:justify-between md:items-center">
-            {/* LOGO Y BOTÓN HAMBURGUESA */}
+            {/* LOGO Y HAMBURGUESA */}
             <div className="flex justify-between items-center">
                 <Link to="/" className="text-2xl font-bold text-green-800 flex items-center gap-2">
                     <FaCat /> Tonita Market
@@ -72,7 +72,7 @@ const Navbar = () => {
                     )}
                 </div>
 
-                {/* PUBLICAR (SOLO LOGUEADO) */}
+                {/* PUBLICAR (si está logueado) */}
                 {usuarioAutenticado && (
                     <div ref={publicarRef} className="relative">
                         <button
@@ -91,23 +91,32 @@ const Navbar = () => {
                     </div>
                 )}
 
-                {/* CARRITO + MENSAJES */}
+                {/* CARRITO, HISTORIAL y ELIMINAR PUBLICACIONES */}
                 {usuarioAutenticado && (
                     <>
                         <Link to="/carrito" className="flex items-center gap-1 text-green-800 font-semibold hover:underline">
                             <FaShoppingCart />
                             <span>{carrito.length}</span>
                         </Link>
-
                         <Link to="/historial" className="flex items-center gap-1 text-green-800 font-semibold hover:underline">
-                            <span className="material-icons">📜</span>
-                            <span>Historial</span>
+                            📜 Historial
                         </Link>
 
-                        <Link to="/chat" className="flex items-center gap-1 text-green-800 font-semibold hover:underline">
-                            <FaComments />
-                            <span>Mensajes</span>
-                        </Link>
+                        {usuarioAutenticado?.role_cat_id === 1 ? (
+                            <Link
+                                to="/admin/eliminar-publicaciones"
+                                className="text-purple-800 font-semibold hover:underline"
+                            >
+                                🛠 Eliminar publicaciones
+                            </Link>
+                        ) : (
+                            <Link
+                                to="/eliminar-publicacion"
+                                className="text-green-800 font-semibold hover:underline"
+                            >
+                                Eliminar publicación
+                            </Link>
+                        )}
                     </>
                 )}
 
@@ -127,10 +136,7 @@ const Navbar = () => {
                         </button>
 
                         {mostrarUsuario && (
-                            <div
-                                className="absolute right-0 mt-2 bg-white border shadow-md rounded-md z-10 p-2"
-                                onClick={(e) => e.stopPropagation()} // evita que se cierre al hacer click dentro
-                            >
+                            <div className="absolute right-0 mt-2 bg-white border shadow-md rounded-md z-10 p-2 w-56">
                                 <button
                                     onClick={logout}
                                     className="w-full text-center bg-red-500 text-white font-semibold py-2 px-4 rounded hover:bg-red-600 transition"

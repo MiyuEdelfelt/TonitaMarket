@@ -1,16 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import CardItem from '../components/ItemCard';
 import ItemModal from '../components/ItemModal';
-import data from '../data/items';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const Productos = () => {
+    const { token } = useAuth(); // Suponiendo que el token se guarda aquí
     const [busqueda, setBusqueda] = useState('');
     const [itemSeleccionado, setItemSeleccionado] = useState(null);
+    const [productos, setProductos] = useState([]);
 
-    const productos = data.filter(item =>
-        item.tipo === 'producto' &&
-        (item.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-            item.descripcion.toLowerCase().includes(busqueda.toLowerCase()))
+    useEffect(() => {
+        const obtenerProductos = async () => {
+            try {
+                const response = await axios.get('https://bk-tonita.onrender.com/api/publications', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                const publicaciones = response.data.publications || [];
+
+                const productosFiltrados = publicaciones.filter(pub => pub.category_id === 1);
+                setProductos(productosFiltrados);
+            } catch (error) {
+                console.error('Error al obtener productos desde el backend:', error);
+            }
+        };
+
+        obtenerProductos();
+    }, [token]);
+
+    const productosFiltrados = productos.filter(item =>
+        item.title_publication.toLowerCase().includes(busqueda.toLowerCase()) ||
+        item.description_publication.toLowerCase().includes(busqueda.toLowerCase())
     );
 
     return (
@@ -23,9 +45,10 @@ const Productos = () => {
                 placeholder="Buscar producto..."
                 className="w-full p-2 border border-gray-300 rounded-md"
             />
+
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-                {productos.map(item => (
-                    <CardItem key={item.id} item={item} onClick={setItemSeleccionado} />
+                {productosFiltrados.map(item => (
+                    <CardItem key={item.id_publication} item={item} onClick={setItemSeleccionado} />
                 ))}
             </div>
 

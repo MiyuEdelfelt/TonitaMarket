@@ -1,48 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import ItemCard from '../components/ItemCard';
 import ItemModal from '../components/ItemModal';
+import { useAuth } from '../context/AuthContext';
 
 const Adopciones = () => {
+    const { token } = useAuth();
     const [busqueda, setBusqueda] = useState('');
     const [itemSeleccionado, setItemSeleccionado] = useState(null);
+    const [adopciones, setAdopciones] = useState([]);
 
-    const adopciones = [
-        {
-            id: 3,
-            nombre: 'Bigotes',
-            descripcion: 'Gato negro, ideal para compañía. Desparasitado.',
-            categoria: 'gato joven',
-            imagen: '/img/gato1.png',
-            tipo: 'adopcion',
-            id_usuario: 103,
-        },
-        {
-            id: 2,
-            nombre: 'Pelusa',
-            descripcion: 'Gatita blanca, tranquila y esterilizada.',
-            categoria: 'gata adulta',
-            imagen: '/img/gato2.png',
-            tipo: 'adopcion',
-            id_usuario: 102,
-        },
-        {
-            id: 1,
-            nombre: 'Mishito',
-            descripcion: 'Gatito rescatado, muy juguetón y sociable.',
-            categoria: 'gatito bebé',
-            imagen: '/img/gato3.png',
-            tipo: 'adopcion',
-            id_usuario: 101,
-        },
-    ];
+    useEffect(() => {
+        const obtenerAdopciones = async () => {
+            try {
+                const res = await axios.get('https://bk-tonita.onrender.com/api/publications', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
 
-    const filtradas = adopciones
-        .filter((item) =>
-            item.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-            item.descripcion.toLowerCase().includes(busqueda.toLowerCase()) ||
-            item.categoria.toLowerCase().includes(busqueda.toLowerCase())
-        )
-        .sort((a, b) => b.id - a.id); // Más reciente a más antigua
+                const publicaciones = res.data.publications || [];
+
+                const adopcionesFiltradas = publicaciones
+                    .filter(pub => pub.category_id === 3)
+                    .sort((a, b) => b.id_publication - a.id_publication); // más recientes primero
+
+                setAdopciones(adopcionesFiltradas);
+            } catch (error) {
+                console.error('Error al obtener adopciones:', error);
+            }
+        };
+
+        obtenerAdopciones();
+    }, [token]);
+
+    const filtradas = adopciones.filter((item) =>
+        item.title_publication.toLowerCase().includes(busqueda.toLowerCase()) ||
+        item.description_publication.toLowerCase().includes(busqueda.toLowerCase())
+    );
 
     return (
         <div className="p-6 max-w-5xl mx-auto">
@@ -58,7 +53,7 @@ const Adopciones = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filtradas.map((item) => (
-                    <ItemCard key={item.id} item={item} onClick={setItemSeleccionado} />
+                    <ItemCard key={item.id_publication} item={item} onClick={setItemSeleccionado} />
                 ))}
             </div>
 

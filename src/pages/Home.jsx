@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
-import items from '../data/items';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import ItemCard from '../components/ItemCard';
 import ItemModal from '../components/ItemModal';
 
 const Home = () => {
+    const [items, setItems] = useState([]);
     const [filtro, setFiltro] = useState('');
     const [busqueda, setBusqueda] = useState('');
     const [itemSeleccionado, setItemSeleccionado] = useState(null);
 
-    const filtrados = items.filter(item =>
-        item.nombre.toLowerCase().includes(busqueda.toLowerCase()) &&
-        (filtro === '' || item.tipo === filtro)
-    );
+    useEffect(() => {
+        axios.get('https://bk-tonita.onrender.com/api/publications') // ✅ Traer todas las publicaciones
+            .then(res => {
+                console.log('Datos desde backend:', res.data);
+                setItems(res.data.publications);
+            })
+            .catch(err => {
+                console.error('Error al cargar publicaciones:', err);
+            });
+    }, []);
+
+    const filtrados = Array.isArray(items)
+        ? items.filter(item =>
+            item.title_publication.toLowerCase().includes(busqueda.toLowerCase()) &&
+            (filtro === '' || (
+                (filtro === 'producto' && item.category_id === 1) ||
+                (filtro === 'servicio' && item.category_id === 2)
+            ))
+        )
+        : [];
 
     return (
         <div className="p-6 max-w-7xl mx-auto">
@@ -38,11 +55,10 @@ const Home = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {filtrados.map(item => (
-                    <ItemCard key={item.id} item={item} onClick={setItemSeleccionado} />
+                    <ItemCard key={item.id_publication} item={item} onClick={setItemSeleccionado} />
                 ))}
             </div>
 
-            {/* Modal */}
             {itemSeleccionado && (
                 <ItemModal item={itemSeleccionado} onClose={() => setItemSeleccionado(null)} />
             )}

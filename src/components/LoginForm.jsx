@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash, FaPaw, FaCat } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 const LoginForm = () => {
     const [email, setEmail] = useState('');
@@ -12,21 +13,36 @@ const LoginForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Simula login ficticio sin backend
-        if (email === 'gatito@mail.com' && pass === 'gatoconbotas') {
-            const usuarioSimulado = {
-                nombre: 'Gatito',
-                rol: 'normal_cat',
-                email: email,
-                token: 'gatitotoken123'
+        try {
+            const response = await axios.post('https://bk-tonita.onrender.com/api/users/login', {
+                emailOrAlias: email,
+                password: pass,
+            });
+
+            const data = response.data;
+
+            const usuarioAutenticado = {
+                id: data.id,
+                nombre: data.nombre,
+                rol: data.rol,
+                email: data.email,
+                token: data.token,
+                role_cat_id: data.role_cat_id,
             };
 
-            localStorage.setItem('usuarioToñita', JSON.stringify(usuarioSimulado));
-            login(); // actualiza el estado del contexto
+            login(usuarioAutenticado); // guarda en contexto y localStorage
             setError('');
-            window.location.href = '/'; // redirige
-        } else {
-            setError('Credenciales incorrectas');
+
+            // 🔁 Redirigir según el tipo de usuario
+            if (usuarioAutenticado.role_cat_id === 1) {
+                window.location.href = '/';
+            } else {
+                window.location.href = '/';
+            }
+
+        } catch (error) {
+            console.error('Error en login:', error);
+            setError('Credenciales incorrectas o error de conexión');
         }
     };
 
@@ -37,7 +53,7 @@ const LoginForm = () => {
 
                 <input
                     type="email"
-                    placeholder="Correo electrónico o alias"
+                    placeholder="Correo electrónico"
                     className="p-3 border rounded-lg"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

@@ -1,16 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CardItem from '../components/ItemCard';
 import ItemModal from '../components/ItemModal';
-import data from '../data/items';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const Servicios = () => {
+    const { token } = useAuth();
     const [busqueda, setBusqueda] = useState('');
     const [itemSeleccionado, setItemSeleccionado] = useState(null);
+    const [servicios, setServicios] = useState([]);
 
-    const servicios = data.filter(item =>
-        item.tipo === 'servicio' &&
-        (item.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-            item.descripcion.toLowerCase().includes(busqueda.toLowerCase()))
+    useEffect(() => {
+        const obtenerServicios = async () => {
+            try {
+                const response = await axios.get('https://bk-tonita.onrender.com/api/publications', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                const publicaciones = response.data.publications || [];
+
+                const serviciosFiltrados = publicaciones.filter(pub => pub.category_id === 2);
+                setServicios(serviciosFiltrados);
+            } catch (error) {
+                console.error('Error al obtener servicios desde el backend:', error);
+            }
+        };
+
+        obtenerServicios();
+    }, [token]);
+
+    const serviciosFiltrados = servicios.filter(item =>
+        item.title_publication.toLowerCase().includes(busqueda.toLowerCase()) ||
+        item.description_publication.toLowerCase().includes(busqueda.toLowerCase())
     );
 
     return (
@@ -23,13 +45,13 @@ const Servicios = () => {
                 placeholder="Buscar servicio..."
                 className="w-full p-2 border border-gray-300 rounded-md"
             />
+
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-                {servicios.map(item => (
-                    <CardItem key={item.id} item={item} onClick={setItemSeleccionado} />
+                {serviciosFiltrados.map(item => (
+                    <CardItem key={item.id_publication} item={item} onClick={setItemSeleccionado} />
                 ))}
             </div>
 
-            {/* Modal */}
             {itemSeleccionado && (
                 <ItemModal item={itemSeleccionado} onClose={() => setItemSeleccionado(null)} />
             )}
